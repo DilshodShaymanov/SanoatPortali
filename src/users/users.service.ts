@@ -42,7 +42,7 @@ export class UsersService {
     if (!link) {
       throw new BadRequestException('Activation link not found');
     }
-    const updateUser = await this.userModel.update(
+    const [affectedCount, affectedUsers] = await this.userModel.update(
       { is_active: true },
       {
         where: {
@@ -52,13 +52,19 @@ export class UsersService {
         returning: true,
       },
     );
-    if (!updateUser[1][0]) {
-      throw new BadRequestException('User already activated');
+    if (affectedCount === 0 || !affectedUsers.length) {
+      throw new BadRequestException(
+        "Foydalanuvchi allaqachon faollashtirilgan yoki havola noto'g'ri",
+      );
     }
-    const response = {
-      message: 'User activated successfully!',
-      user: updateUser[1][0].is_active,
+    const activatedUser = affectedUsers[0];
+    return {
+      message: 'Foydalanuvchi muvaffaqiyatli faollashtirildi!',
+      user: {
+        id: activatedUser.id,
+        email: activatedUser.email,
+        is_active: activatedUser.is_active,
+      },
     };
-    return response;
   }
 }

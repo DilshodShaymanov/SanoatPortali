@@ -77,6 +77,7 @@ export class CreateUserDto {
     example: true,
     description: 'Is user active?',
   })
+  @IsOptional()
   @IsNotEmpty()
   is_active: boolean;
 

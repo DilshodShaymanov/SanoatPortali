@@ -18,7 +18,7 @@ import { join } from 'path';
           },
         },
         defaults: {
-          from: `Skill_Academy ${config.get<string>('SMTP_HOST')}`,
+          from: `SanoatPortali ${config.get<string>('SMTP_HOST')}`,
         },
         template: {
           dir: join(__dirname, 'templates'),

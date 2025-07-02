@@ -314,14 +314,14 @@ export class AuthService {
       activation_link,
     });
 
-    this.setRefreshTokenCookie(res, tokens.refresh_token);
-
     try {
       await this.mailService.sendMail(updatedUser[1][0]);
     } catch (error) {
       console.log(error);
       throw new InternalServerErrorException('Xat yuborishda xatolik');
     }
+
+    this.setRefreshTokenCookie(res, tokens.refresh_token);
 
     const response = {
       message: "Foydalanuvchi muvaffaqiyatli ro'yxatdan o'tdi!",
