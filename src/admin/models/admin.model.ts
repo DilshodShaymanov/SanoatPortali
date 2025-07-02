@@ -6,10 +6,10 @@ interface ICreationAdminAttr {
   email: string;
   password: string;
   phone_number: string;
-  image: string;
   passport_seria: string;
-  is_creator: boolean;
+  image: string;
   is_active: boolean;
+  is_creator: boolean;
   hashed_refresh_token: string;
 }
 
@@ -27,9 +27,9 @@ export class Admin extends Model<Admin, ICreationAdminAttr> {
   id: number;
 
   @ApiProperty({
-    example: 'Admin Ismi',
-    description: 'Adminning ismi',
-  })
+      description: 'Full Name of admin',
+      example: 'ALi Valiyev',
+    })
   @Column({
     type: DataType.STRING,
     allowNull: false,

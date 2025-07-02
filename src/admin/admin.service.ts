@@ -7,6 +7,7 @@ import { UpdateAdminDto } from './dto/update-admin.dto';
 @Injectable()
 export class AdminService {
   constructor(@InjectModel(Admin) private adminModel: typeof Admin) {}
+
   async create(createAdminDto: CreateAdminDto) {
     return this.adminModel.create(createAdminDto);
   }

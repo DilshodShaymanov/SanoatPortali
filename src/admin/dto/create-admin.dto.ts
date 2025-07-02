@@ -12,76 +12,80 @@ import {
 export class CreateAdminDto {
   @ApiProperty({
     description: 'Full Name of admin',
-    example: 'Sardor Sobidjonov',
+    example: 'ALi Valiyev',
   })
-  @IsString({ message: 'Full name must be a string' })
-  @Length(3, 50, {
-    message: 'Full name length must be between 3 and 50 characters',
-  })
+  @IsString()
+  @IsNotEmpty()
   full_name: string;
 
   @ApiProperty({
-    description: 'Email address of admin',
-    example: 'admin@gmail.com',
+    example: 'admin@example.com',
+    description: 'Adminning email manzili',
   })
-  @IsEmail({}, { message: 'Invalid email address format' })
-  @Length(5, 100, {
-    message: 'Email length must be between 5 and 100 characters',
-  })
+  @IsEmail()
+  @IsNotEmpty()
   email: string;
 
-  @ApiProperty({ description: 'Password', example: 'P@ssw0rd' })
-  @IsString({ message: 'Password must be a string' })
-  @Length(8, 100, {
-    message: 'Password length must be at least 8 characters',
+  @ApiProperty({
+    example: 'password123',
+    description: 'Admin paroli',
   })
+  @IsString()
+  @IsNotEmpty()
   password: string;
 
-  @ApiProperty({ description: 'Confirm Password', example: 'P@ssw0rd' })
-  @IsString({ message: 'Confirm password must be a string' })
-  @Length(8, 100, {
-    message: 'Confirm password length must be at least 8 characters',
+  @ApiProperty({
+    example: 'password123',
+    description: 'Admin parolini takrorlang',
   })
+  @IsString()
+  @IsNotEmpty()
   confirm_password: string;
 
   @ApiProperty({
-    description: 'Admin phone number',
     example: '+998901234567',
+    description: 'Admin telefon raqami',
   })
   @Matches(/^\+998[0-9]{9}$/, {
     message: 'Invalid phone number format. Correct format: +998XXXXXXXXX',
   })
   phone_number: string;
 
-  @ApiProperty({ description: 'Admin image', example: 'admin.png' })
-  @IsString({ message: 'Amin image must be a string' })
+  @ApiProperty({
+    description: 'Admin image',
+    example: 'admin.png',
+  })
+  @IsString()
   @IsNotEmpty()
   image: string;
 
-  @ApiProperty({ description: 'Admin Pasport seria', example: 'AB1234567' })
-  @IsString({ message: 'Admin Pasport seria must be a string' })
+  @ApiProperty({
+    description: 'Admin Pasport seria',
+    example: 'AB1234567',
+  })
+  @IsString()
   @IsNotEmpty()
   pasport_seria: string;
 
   @ApiProperty({
-    example: false,
-    description: 'superadmin or admin',
-  })
-  @IsOptional()
-  @IsBoolean()
-  is_creator: boolean;
-
-  @ApiProperty({
     example: true,
-    description: 'Admin activ or IsActive',
+    description: "Admin faolligini ko'rsatadi",
   })
   @IsOptional()
   @IsBoolean()
   is_active: boolean;
 
   @ApiProperty({
+    example: false,
+    description: "SuperAdmin ekanligini ko'rsatadi",
+  })
+  @IsOptional()
+  @IsBoolean()
+  is_creator: boolean;
+
+  @ApiProperty({
     example: 'hashedRefreshTokenString',
-    description: 'Admin uchun hashed refresh token',
+    description: 'Admin uchun hashlangan refresh token',
   })
   @IsOptional()
   @IsString()
