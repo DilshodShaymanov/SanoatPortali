@@ -6,7 +6,7 @@ interface ICreationAdminAttr {
   email: string;
   password: string;
   phone_number: string;
-  passport_seria: string;
+  pasport_seria: string;
   image: string;
   is_active: boolean;
   is_creator: boolean;

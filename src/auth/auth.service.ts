@@ -22,8 +22,8 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly adminService: AdminService,
-    private readonly usersService: UsersService,
-    private readonly mailService: MailService,
+    // private readonly usersService: UsersService,
+    // private readonly mailService: MailService,
   ) {}
 
   // Admin uchun tokenlar yaratish
