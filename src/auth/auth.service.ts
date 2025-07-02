@@ -22,8 +22,8 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly adminService: AdminService,
-    // private readonly usersService: UsersService,
-    // private readonly mailService: MailService,
+    private readonly usersService: UsersService,
+    private readonly mailService: MailService,
   ) {}
 
   // Admin uchun tokenlar yaratish
@@ -231,6 +231,215 @@ export class AuthService {
     } catch (error) {
       throw new UnauthorizedException(
         error.message || 'Admin refresh token yangilashda xatolik yuz berdi',
+      );
+    }
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // User uchun tokenlar yaratish
+  async generateTokensWithUser(user: User) {
+    const payload = {
+      id: user.id,
+      full_name: user.full_name,
+      email: user.email,
+      is_active: user.is_active,
+    };
+
+    try {
+      const [access_token, refresh_token] = await Promise.all([
+        this.jwtService.signAsync(payload, {
+          secret: process.env.ACCESS_TOKEN_KEY,
+          expiresIn: process.env.ACCESS_TOKEN_TIME,
+        }),
+        this.jwtService.signAsync(payload, {
+          secret: process.env.REFRESH_TOKEN_KEY,
+          expiresIn: process.env.REFRESH_TOKEN_TIME,
+        }),
+      ]);
+
+      return { access_token, refresh_token };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Token yaratishda xatolik yuz berdi',
+      );
+    }
+  }
+
+  // Refresh User tokenni yangilash
+  async updateRefreshTokenUser(id: number, refreshToken: string) {
+    try {
+      const hashed_refresh_token = await bcrypt.hash(refreshToken, 10);
+
+      await this.usersService.update(id, { hashed_refresh_token });
+    } catch (error) {
+      throw new Error('Refresh tokenni yangilashda xatolik yuz berdi');
+    }
+  }
+
+  // Userni ro‘yxatdan o‘tkazish
+  async signUpUser(createUserDto: CreateUserDto, res: Response) {
+    const candidate = await this.usersService.findUserByEmail(
+      createUserDto.email,
+    );
+
+    if (candidate) {
+      throw new BadRequestException('Bunday Foydalnuvchi mavjud');
+    }
+    if (createUserDto.password !== createUserDto.confirm_password) {
+      throw new BadRequestException('Parollar mos emas');
+    }
+
+    const hashed_password = await bcrypt.hash(createUserDto.password, 7);
+
+    const newUser = await this.usersService.create({
+      ...createUserDto,
+      password: hashed_password,
+    });
+
+    const tokens = await this.generateTokensWithUser(newUser);
+    const hashed_refresh_token = await bcrypt.hash(tokens.refresh_token, 10);
+
+    const activation_link = uuid.v4();
+
+    const updatedUser = await this.usersService.update(newUser.id, {
+      hashed_refresh_token,
+      activation_link,
+    });
+
+    this.setRefreshTokenCookie(res, tokens.refresh_token);
+
+    try {
+      await this.mailService.sendMail(updatedUser[1][0]);
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException('Xat yuborishda xatolik');
+    }
+
+    const response = {
+      message: "Foydalanuvchi muvaffaqiyatli ro'yxatdan o'tdi!",
+      user: updatedUser[1][0],
+      access_token: tokens.access_token,
+    };
+    return response;
+  }
+
+  // Sign In User
+  async signInUser(signInAdminDto: SignInAdminDto, res: Response) {
+    const user = await this.usersService.findUserByEmail(signInAdminDto.email);
+
+    if (!user) {
+      throw new BadRequestException("Login yoki parol noto'g'ri");
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      signInAdminDto.password,
+      user.password,
+    );
+    if (!isPasswordValid) {
+      throw new BadRequestException("Login yoki parol noto'g'ri");
+    }
+
+    if (!user.is_active) {
+      throw new BadRequestException('Foydalanuvchi hali faollashtirilmagan');
+    }
+
+    const tokens = await this.generateTokensWithUser(user);
+    const hashed_refresh_token = await bcrypt.hash(tokens.refresh_token, 10);
+
+    await this.usersService.update(user.id, {
+      hashed_refresh_token,
+    });
+
+    this.setRefreshTokenCookie(res, tokens.refresh_token);
+
+    const response = {
+      message: 'Foydalanuvchi tizimga muvaffaqiyatli kirdi',
+      user: {
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email,
+      },
+      access_token: tokens.access_token,
+    };
+
+    return response;
+  }
+
+  // Sign Out User
+  async signOutUser(refreshToken: string, res: Response) {
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: process.env.REFRESH_TOKEN_KEY,
+      });
+
+      if (!payload) {
+        throw new BadRequestException("Foydalanuvchi verifikatsiyadan o'tmadi");
+      }
+
+      const user = await this.usersService.findOne(payload.id);
+      if (!user) {
+        throw new BadRequestException('Foydalanuvchi topilmadi');
+      }
+
+      await this.usersService.update(user.id, { hashed_refresh_token: null });
+
+      res.clearCookie('refresh_token');
+
+      return {
+        message: 'Foydalanuvchi tizimdan muvaffaqiyatli chiqdi',
+      };
+    } catch (error) {
+      throw new UnauthorizedException(
+        error.message || 'Foydalanuvchi tizimdan chiqishda xatolik yuz berdi',
+      );
+    }
+  }
+
+  // Refresh Token User
+  async refreshTokenUser(refreshToken: string, res: Response) {
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: process.env.REFRESH_TOKEN_KEY,
+      });
+
+      const user = await this.usersService.findOne(payload.id);
+
+      if (!user || !user.hashed_refresh_token) {
+        throw new BadRequestException(
+          "Foydalanuvchi topilmadi yoki refresh token noto'g'ri",
+        );
+      }
+
+      const isRefreshTokenValid = await bcrypt.compare(
+        refreshToken,
+        user.hashed_refresh_token,
+      );
+      if (!isRefreshTokenValid) {
+        throw new BadRequestException("Refresh token noto'g'ri");
+      }
+
+      const tokens = await this.generateTokensWithUser(user);
+      const hashed_refresh_token = await bcrypt.hash(tokens.refresh_token, 10);
+
+      await this.usersService.update(user.id, { hashed_refresh_token });
+
+      this.setRefreshTokenCookie(res, tokens.refresh_token);
+
+      return {
+        message: 'Token yangilandi😊',
+        access_token: tokens.access_token,
+      };
+    } catch (error) {
+      throw new BadRequestException(
+        'Foydalanuvchi refresh token yangilashda xatolik',
       );
     }
   }

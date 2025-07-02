@@ -9,12 +9,6 @@ import {
   MinLength,
 } from 'class-validator';
 
-enum Gender {
-  MALE = 'male',
-  FEMALE = 'female',
-  OTHER = 'other',
-}
-
 export class CreateUserDto {
   @ApiProperty({
     example: 'Ali Valiyev',
@@ -73,11 +67,11 @@ export class CreateUserDto {
 
   @ApiProperty({
     example: 'male',
-    enum: Gender,
     description: 'User gender',
   })
-  @IsEnum(Gender)
-  gender: Gender;
+  @IsString()
+  @IsNotEmpty()
+  gender: string;
 
   @ApiProperty({
     example: true,

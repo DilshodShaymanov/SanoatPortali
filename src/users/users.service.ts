@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from './models/user.model';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -23,6 +24,14 @@ export class UsersService {
 
   async findOne(id: number) {
     return this.userModel.findByPk(id);
+  }
+
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    const update = await this.userModel.update(updateUserDto, {
+      where: { id },
+      returning: true,
+    });
+    return update;
   }
 
   async remove(id: number) {
@@ -52,6 +61,4 @@ export class UsersService {
     };
     return response;
   }
-
-  
 }

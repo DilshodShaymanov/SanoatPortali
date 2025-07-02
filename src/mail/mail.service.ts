@@ -12,11 +12,10 @@ export class MailService {
     try {
       await this.mailerService.sendMail({
         to: user.email,
-        subject: 'Skill Academyga xush kelibsiz!',
+        subject: 'Sanoat Portaliga xush kelibsiz!',
         template: './confirm',
         context: {
-          // first_name: user.first_name,
-          // last_name: user.last_name,
+          first_name: user.full_name,
           url,
         },
       });

@@ -1,5 +1,13 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  ForeignKey,
+  Model,
+  Table,
+} from 'sequelize-typescript';
 import { ApiProperty } from '@nestjs/swagger';
+import { Region } from '../../region/models/region.model';
 
 interface ICreationUserAttr {
   full_name: string;
@@ -9,7 +17,7 @@ interface ICreationUserAttr {
   phone_number: string;
   image?: string;
   stir: string;
-  gender: 'male' | 'female' | 'other';
+  gender: string;
   is_active: boolean;
   hashed_refresh_token?: string;
   activation_link?: string;
@@ -106,7 +114,7 @@ export class User extends Model<User, ICreationUserAttr> {
     type: DataType.ENUM('male', 'female'),
     allowNull: false,
   })
-  gender: 'male' | 'female';
+  gender: string;
 
   @ApiProperty({
     example: true,
@@ -137,4 +145,18 @@ export class User extends Model<User, ICreationUserAttr> {
     allowNull: true,
   })
   activation_link?: string;
+
+  @ApiProperty({
+    example: 1,
+    description: 'Region Id (ForiegnKey)',
+  })
+  @ForeignKey(() => Region)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
+  regionId: number;
+
+  @BelongsTo(() => Region)
+  region: Region;
 }
