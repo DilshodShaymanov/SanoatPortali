@@ -12,6 +12,7 @@ import {
 enum Gender {
   MALE = 'male',
   FEMALE = 'female',
+  OTHER = 'other',
 }
 
 export class CreateUserDto {
@@ -31,7 +32,7 @@ export class CreateUserDto {
   email: string;
 
   @ApiProperty({
-    example: 'Ali12345',
+    example: 'password123',
     description: 'User password',
   })
   @IsString()
@@ -40,7 +41,7 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
-    example: 'Ali12345',
+    example: 'password123',
     description: 'User confirm password',
   })
   @IsString()
@@ -57,7 +58,6 @@ export class CreateUserDto {
   @ApiProperty({
     example: 'user.jpg',
     description: 'User photo',
-    required: false,
   })
   @IsOptional()
   @IsString()
@@ -89,18 +89,16 @@ export class CreateUserDto {
   @ApiProperty({
     example: 'hashed_refresh_token_value',
     description: 'Refresh token (hashed)',
-    required: false,
   })
   @IsOptional()
   @IsString()
   hashed_refresh_token?: string;
 
   @ApiProperty({
-    example: 'a1b2c3d4e5',
+    example: 'link',
     description: 'Activation link',
-    required: false,
   })
   @IsOptional()
   @IsString()
-  activation_link?: string;
+  activation_link: string;
 }
